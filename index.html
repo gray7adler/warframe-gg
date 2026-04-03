@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Warframe Grind Dashboard — All Frames</title>
+  <meta name="description" content="Interactive Warframe grind difficulty dashboard. Sort and filter all frames, weapons, and companions by ease, farm method, and drop source." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- ── WELCOME POPUP ─────────────────────────────── -->
+  <div class="welcome-overlay" id="welcomeOverlay" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
+    <div class="welcome-modal">
+      <div class="welcome-logo">
+        <svg width="48" height="48" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 2L4 8V16C4 22.627 9.373 28 16 28C22.627 28 28 22.627 28 16V8L16 2Z" stroke="currentColor" stroke-width="1.5" fill="none"/>
+          <path d="M16 6L8 10V16C8 20.418 11.582 24 16 24C20.418 24 24 20.418 24 16V10L16 6Z" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-width="1"/>
+          <path d="M16 10V22M10 14L16 10L22 14" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h2 class="welcome-title" id="welcomeTitle">Welcome to<br><span class="welcome-brand">GrindGuide</span></h2>
+      <p class="welcome-subtitle">Your Warframe farming companion — all frames, weapons, and companions sorted by grind difficulty.</p>
+      <div class="welcome-divider"></div>
+      <p class="welcome-credit">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:-2px;margin-right:4px"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Questions or issues? Message <strong>@kkyron</strong> on the
+        <a href="https://forums.warframe.com" target="_blank" rel="noopener" class="welcome-link">Warframe Forums</a>.
+      </p>
+      <button class="welcome-btn" id="welcomeClose" data-testid="btn-welcome-close">
+        Let's go — Enter the Arsenal
+      </button>
+      <label class="welcome-remember">
+        <input type="checkbox" id="dontShowAgain" /> Don't show again
+      </label>
+    </div>
+  </div>
+
+  <!-- ── MAIN DASHBOARD ────────────────────────────── -->
+  <div class="dashboard" id="app">
+
+    <!-- SIDEBAR (desktop) -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo" aria-label="Warframe Grind Dashboard">
+          <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+            <path d="M16 2L4 8V16C4 22.627 9.373 28 16 28C22.627 28 28 22.627 28 16V8L16 2Z" stroke="currentColor" stroke-width="1.5" fill="none"/>
+            <path d="M16 6L8 10V16C8 20.418 11.582 24 16 24C20.418 24 24 20.418 24 16V10L16 6Z" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-width="1"/>
+            <path d="M16 10V22M10 14L16 10L22 14" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="logo-text">GRIND<span class="logo-accent">GUIDE</span></span>
+        </div>
+        <button class="theme-toggle" data-theme-toggle aria-label="Switch to light mode">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="search-wrap">
+          <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="searchInput" class="search-input" placeholder="Search…" data-testid="input-search" />
+          <button class="search-clear" id="clearSearch" aria-label="Clear search" style="display:none">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <p class="sidebar-label">Difficulty</p>
+        <div class="filter-group" id="difficultyFilter">
+          <button class="filter-btn active" data-filter="difficulty" data-value="all">All</button>
+          <button class="filter-btn easy"      data-filter="difficulty" data-value="Easy">Easy</button>
+          <button class="filter-btn medium"    data-filter="difficulty" data-value="Medium">Medium</button>
+          <button class="filter-btn hard"      data-filter="difficulty" data-value="Hard">Hard</button>
+          <button class="filter-btn nightmare" data-filter="difficulty" data-value="Nightmare">Nightmare</button>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <p class="sidebar-label">Farm Method</p>
+        <div class="filter-group" id="methodFilter">
+          <button class="filter-btn active" data-filter="method" data-value="all">All</button>
+          <button class="filter-btn" data-filter="method" data-value="Boss">Boss</button>
+          <button class="filter-btn" data-filter="method" data-value="Sanctuary Onslaught">Sanct. Onslaught</button>
+          <button class="filter-btn" data-filter="method" data-value="Dojo Research">Dojo Research</button>
+          <button class="filter-btn" data-filter="method" data-value="Quest">Quest</button>
+          <button class="filter-btn" data-filter="method" data-value="Bounty">Bounty</button>
+          <button class="filter-btn" data-filter="method" data-value="Disruption">Disruption</button>
+          <button class="filter-btn" data-filter="method" data-value="Spy">Spy</button>
+          <button class="filter-btn" data-filter="method" data-value="Nightwave">Nightwave</button>
+          <button class="filter-btn" data-filter="method" data-value="Void Storm">Void Storm</button>
+          <button class="filter-btn" data-filter="method" data-value="Infested Salvage">Infest. Salvage</button>
+          <button class="filter-btn" data-filter="method" data-value="Special">Special</button>
+          <button class="filter-btn" data-filter="method" data-value="Market">Market</button>
+          <button class="filter-btn" data-filter="method" data-value="Void Relic">Void Relic</button>
+          <button class="filter-btn" data-filter="method" data-value="Syndicate">Syndicate</button>
+        </div>
+      </div>
+
+      <!-- Frames-only: Prime filter -->
+      <div class="sidebar-section" id="primeFilterSection">
+        <p class="sidebar-label">Prime Status</p>
+        <div class="filter-group" id="primeFilter">
+          <button class="filter-btn active" data-filter="prime" data-value="all">All</button>
+          <button class="filter-btn" data-filter="prime" data-value="active" style="border-color:rgba(201,168,80,0.5);color:var(--accent)">Active</button>
+          <button class="filter-btn" data-filter="prime" data-value="resurgence" style="border-color:rgba(91,155,232,0.5);color:var(--medium)">Resurgence</button>
+          <button class="filter-btn" data-filter="prime" data-value="vaulted" style="border-color:rgba(204,74,74,0.4);color:var(--nightmare)">Vaulted</button>
+          <button class="filter-btn" data-filter="prime" data-value="noprime" style="border-color:var(--border);color:var(--text-faint)">No Prime</button>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <p class="sidebar-label">Sort By</p>
+        <div class="sort-group">
+          <button class="sort-btn active" data-sort="difficulty">Ease ↑</button>
+          <button class="sort-btn" data-sort="name">Name A–Z</button>
+          <button class="sort-btn" data-sort="method">Method</button>
+          <button class="sort-btn" data-sort="grindScore">Grind Score</button>
+        </div>
+      </div>
+
+      <div class="sidebar-section sidebar-stats" id="sidebarStats">
+        <div class="stat-item"><span class="stat-num" id="statTotal">0</span><span class="stat-lbl">Total</span></div>
+        <div class="stat-item"><span class="stat-num easy" id="statEasy">0</span><span class="stat-lbl">Easy</span></div>
+        <div class="stat-item"><span class="stat-num medium" id="statMedium">0</span><span class="stat-lbl">Medium</span></div>
+        <div class="stat-item"><span class="stat-num hard" id="statHard">0</span><span class="stat-lbl">Hard</span></div>
+        <div class="stat-item"><span class="stat-num nightmare" id="statNightmare">0</span><span class="stat-lbl">Nightmare</span></div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <div class="main-wrap">
+
+      <!-- TOP HEADER (desktop) -->
+      <header class="top-header">
+        <div class="header-left">
+          <h1 class="page-title">Warframe Grind Guide</h1>
+          <span class="result-count" id="resultCount">— results</span>
+        </div>
+        <div class="header-right">
+          <div class="view-toggle">
+            <button class="view-btn active" id="viewGrid" aria-label="Grid view" data-testid="btn-view-grid">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+            </button>
+            <button class="view-btn" id="viewList" aria-label="List view" data-testid="btn-view-list">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- PRIME RESURGENCE BANNER (frames tab only) -->
+      <div class="resurgence-banner" id="resurgenceBanner" style="display:none">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        <span id="resurgenceText"></span>
+        <a id="resurgenceLink" href="https://warframe.fandom.com/wiki/Prime_Resurgence" target="_blank" rel="noopener" class="resurgence-link">View details →</a>
+      </div>
+
+      <main class="main-content" id="mainContent">
+        <div class="frame-grid" id="frameGrid"></div>
+        <div class="empty-state" id="emptyState" style="display:none">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <p>No results match your filters.</p>
+          <button class="btn-reset" id="resetFilters">Reset all filters</button>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- BOTTOM TAB BAR (mobile) -->
+  <nav class="bottom-tabs" aria-label="Main navigation">
+    <button class="bottom-tab active" data-tab="frames" data-testid="btn-tab-frames">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2L3 7v7c0 5 4 9.1 9 10 5-0.9 9-5 9-10V7L12 2z"/></svg>
+      <span>Frames</span>
+    </button>
+    <button class="bottom-tab" data-tab="weapons" data-testid="btn-tab-weapons">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M2 2l20 20"/></svg>
+      <span>Weapons</span>
+    </button>
+    <button class="bottom-tab" data-tab="companions" data-testid="btn-tab-companions">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      <span>Companions</span>
+    </button>
+    <button class="bottom-tab" id="filterToggle" data-testid="btn-filter-toggle">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+      <span>Filter</span>
+    </button>
+  </nav>
+
+  <!-- MOBILE FILTER SHEET -->
+  <div class="filter-sheet" id="filterSheet" aria-hidden="true">
+    <div class="filter-sheet-header">
+      <span class="filter-sheet-title">Filters</span>
+      <button class="filter-sheet-close" id="filterSheetClose" aria-label="Close filters">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="filter-sheet-body" id="filterSheetBody">
+      <!-- Dynamically populated from sidebar content on mobile -->
+    </div>
+    <button class="filter-sheet-apply" id="filterSheetApply">Apply Filters</button>
+  </div>
+  <div class="sheet-backdrop" id="sheetBackdrop"></div>
+
+  <!-- DETAIL MODAL -->
+  <div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle" style="display:none">
+    <div class="modal" id="modal">
+      <button class="modal-close" id="modalClose" aria-label="Close modal" data-testid="btn-modal-close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+      <div class="modal-header">
+        <div class="modal-badge" id="modalDiffBadge"></div>
+        <h2 class="modal-title" id="modalTitle"></h2>
+        <p class="modal-subtitle" id="modalSubtitle"></p>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <!-- DATA FILES (split) -->
+  <script src="data-frames.js"></script>
+  <script src="data-weapons.js"></script>
+  <script src="data-companions.js"></script>
+  <script src="data-primes.js"></script>
+
+  <!-- APP LOGIC -->
+  <script src="app.js"></script>
+<script data-pplx-inline-edit>
+(function(){
+  if(window===window.top)return;
+  function inlineAll(orig,clone){
+    if(orig.nodeType!==1)return;
+    try{
+      var cs=getComputedStyle(orig);
+      var t='';
+      for(var i=0;i<cs.length;i++){t+=cs[i]+':'+cs.getPropertyValue(cs[i])+';';}
+      clone.style.cssText=t;
+    }catch(e){}
+    var oc=orig.children,cc=clone.children;
+    for(var j=0;j<oc.length&&j<cc.length;j++){inlineAll(oc[j],cc[j]);}
+  }
+  function stripExternal(clone){
+    var imgs=clone.querySelectorAll('img');
+    for(var i=0;i<imgs.length;i++){
+      var s=imgs[i].getAttribute('src');
+      if(s&&!s.startsWith('data:'))imgs[i].removeAttribute('src');
+    }
+    var all=clone.querySelectorAll('*');
+    for(var i=0;i<all.length;i++){
+      var st=all[i].style.cssText;
+      if(st&&st.indexOf('url(')>=0){
+        all[i].style.cssText=st.replace(/url\(["']?(?!data:)[^)"']*["']?\)/gi,'none');
+      }
+    }
+  }
+  window.addEventListener('message',function(e){
+    if(!e.data||e.data.type!=='INLINE_EDIT_CAPTURE_REQUEST')return;
+    var scrollX=window.scrollX||window.pageXOffset||0;
+    var scrollY=window.scrollY||window.pageYOffset||0;
+    var w=window.innerWidth,h=window.innerHeight;
+    try{
+      var clone=document.documentElement.cloneNode(true);
+      var rm=clone.querySelectorAll('script,link[rel="stylesheet"],style');
+      for(var i=0;i<rm.length;i++){rm[i].remove();}
+      inlineAll(document.documentElement,clone);
+      stripExternal(clone);
+      var html=new XMLSerializer().serializeToString(clone);
+      var svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+w+'" height="'+h+'">'
+        +'<foreignObject width="100%" height="100%">'
+        +'<div xmlns="http://www.w3.org/1999/xhtml" style="width:'+w+'px;height:'+h+'px;overflow:hidden">'
+        +'<div style="transform:translate(-'+scrollX+'px,-'+scrollY+'px);transform-origin:top left">'
+        +html+'</div></div></foreignObject></svg>';
+      var svgUrl='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+      var img=new Image();
+      img.onload=function(){
+        var c=document.createElement('canvas');c.width=w;c.height=h;
+        c.getContext('2d').drawImage(img,0,0);
+        window.parent.postMessage({type:'INLINE_EDIT_SCREENSHOT_RESULT',dataUrl:c.toDataURL('image/png'),scrollX:scrollX,scrollY:scrollY},'*');
+      };
+      img.onerror=function(){
+        window.parent.postMessage({type:'INLINE_EDIT_SCREENSHOT_RESULT',dataUrl:null,scrollX:scrollX,scrollY:scrollY},'*');
+      };
+      img.src=svgUrl;
+    }catch(err){
+      window.parent.postMessage({type:'INLINE_EDIT_SCREENSHOT_RESULT',dataUrl:null,scrollX:scrollX,scrollY:scrollY},'*');
+    }
+  });
+})();
+</script></body>
+</html>
